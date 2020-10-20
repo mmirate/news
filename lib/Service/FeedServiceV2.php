@@ -25,6 +25,8 @@ use OCP\AppFramework\Db\Entity;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\ILogger;
 use OCP\IL10N;
+use OCP\Files\IRootFolder;
+use OCP\Http\IClient;
 use OCP\AppFramework\Db\DoesNotExistException;
 
 use OCA\News\Db\Feed;
@@ -66,6 +68,16 @@ class FeedServiceV2 extends Service
     protected $explorer;
 
     /**
+     * @var IRootFolder
+     */
+    private $rootFolder;
+
+    /**
+     * @var IClient
+     */
+    private $client;
+
+    /**
      * FeedService constructor.
      *
      * @param FeedMapperV2    $mapper      DB layer for feeds
@@ -73,6 +85,8 @@ class FeedServiceV2 extends Service
      * @param ItemServiceV2   $itemService Service to manage items
      * @param Explorer        $explorer    Feed Explorer
      * @param HTMLPurifier    $purifier    HTML Purifier
+     * @param IRootFolder     $rootFolder  Root Folder
+     * @param IClient         $client      HTTP client for item enclosures
      * @param LoggerInterface $logger      Logger
      */
     public function __construct(
@@ -81,6 +95,8 @@ class FeedServiceV2 extends Service
         ItemServiceV2 $itemService,
         Explorer $explorer,
         HTMLPurifier $purifier,
+        IRootFolder $rootFolder,
+        IClient $client,
         LoggerInterface $logger
     ) {
         parent::__construct($mapper, $logger);
@@ -89,6 +105,8 @@ class FeedServiceV2 extends Service
         $this->itemService = $itemService;
         $this->explorer    = $explorer;
         $this->purifier    = $purifier;
+        $this->rootFolder  = $rootFolder;
+        $this->client      = $client;
     }
 
     /**
@@ -240,6 +258,32 @@ class FeedServiceV2 extends Service
         }
 
         return $this->mapper->insert($feed);
+    }
+
+
+    public function downloadAllEnclosures(): void {
+        foreach ($this->findAll() as $feed) {
+            if ($feed->getEnclosuresEnabled()) {
+                foreach ($this->itemService->findAllForFeed($feed->getId()) as $item) {
+                    $this->downloadEnclosure($item, $feed);
+                }
+            }
+        }
+    }
+
+
+    public function downloadEnclosure(Item $item, Feed $feed): void {
+        $enclosurePath = $feed->getEnclosuresPath();
+        $url = $item->getEnclosureLink();
+        if (empty($url) || empty($enclosurePath)) { return; }
+
+        $folder = $this->rootFolder->getUserFolder($feed->getUserId());
+        if ($enclosurePath !== '/') {
+            $folder = $folder->get($enclosurePath);
+        }
+        $filename = basename(parse_url($url, PHP_URL_PATH));
+        if ($folder->nodeExists($filename)) { return; }
+        $this->client->get($url, ['save_to'=>$folder->newFile($filename)->fopen('wb')]);
     }
 
 

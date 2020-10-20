@@ -18,17 +18,17 @@ class UpdaterService
 {
 
     /**
-     * @var FolderService
+     * @var FolderServiceV2
      */
     private $folderService;
 
     /**
-     * @var FeedService
+     * @var FeedServiceV2
      */
     private $feedService;
 
     /**
-     * @var ItemService
+     * @var ItemServiceV2
      */
     private $itemService;
 
@@ -53,6 +53,7 @@ class UpdaterService
     public function update()
     {
         $this->feedService->fetchAll();
+        $this->feedService->downloadAllEnclosures();
     }
 
 

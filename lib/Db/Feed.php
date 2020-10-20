@@ -62,6 +62,10 @@ class Feed extends Entity implements IAPI, \JsonSerializable
     /** @var bool */
     protected $fullTextEnabled = false;
     /** @var bool */
+    protected $enclosuresEnabled = false;
+    /** @var string|null */
+    protected $enclosuresPath = null;
+    /** @var bool */
     protected $pinned = false;
     /** @var int */
     protected $updateMode = 0;
@@ -95,6 +99,8 @@ class Feed extends Entity implements IAPI, \JsonSerializable
         $this->addType('location', 'string');
         $this->addType('ordering', 'integer');
         $this->addType('fullTextEnabled', 'boolean');
+        $this->addType('enclosuresEnabled', 'boolean');
+        $this->addType('enclosuresPath', 'string');
         $this->addType('pinned', 'boolean');
         $this->addType('updateMode', 'integer');
         $this->addType('updateErrorCount', 'integer');
@@ -165,6 +171,22 @@ class Feed extends Entity implements IAPI, \JsonSerializable
     public function getFullTextEnabled(): bool
     {
         return $this->fullTextEnabled;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getEnclosuresEnabled(): bool
+    {
+        return $this->enclosuresEnabled;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getEnclosuresPath(): ?string
+    {
+        return $this->enclosuresPath;
     }
 
     /**
@@ -325,6 +347,8 @@ class Feed extends Entity implements IAPI, \JsonSerializable
             'location',
             'ordering',
             'fullTextEnabled',
+            'enclosuresEnabled',
+            'enclosuresPath',
             'pinned',
             'updateMode',
             'updateErrorCount',
@@ -444,6 +468,32 @@ class Feed extends Entity implements IAPI, \JsonSerializable
         if ($this->fullTextEnabled !== $fullTextEnabled) {
             $this->fullTextEnabled = $fullTextEnabled;
             $this->markFieldUpdated('fullTextEnabled');
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param bool $enclosuresEnabled
+     */
+    public function setEnclosuresEnabled(bool $enclosuresEnabled): Feed
+    {
+        if ($this->enclosuresEnabled !== $enclosuresEnabled) {
+            $this->enclosuresEnabled = $enclosuresEnabled;
+            $this->markFieldUpdated('enclosuresEnabled');
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param string|null $enclosuresPath
+     */
+    public function setenclosuresPath(?string $enclosuresPath): Feed
+    {
+        if ($this->enclosuresPath !== $enclosuresPath) {
+            $this->enclosuresPath = $enclosuresPath;
+            $this->markFieldUpdated('enclosuresPath');
         }
 
         return $this;
